@@ -1,5 +1,10 @@
 package com.graphbuilder.struc;
 
+/**
+Bag is a container of objects using an array.  The Bag is designed to be as light weight as possible.
+It only contains a reference to an array and a size counter.  In methods that accept both an Object and
+an int as parameters, the Object is always specified first.
+*/
 public class Bag {
 
 	protected Object[] data = null;

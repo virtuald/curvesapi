@@ -18,9 +18,10 @@ public interface Point {
 	public void setLocation(double[] p);
 
 	/**
-	Returns either a new array with a copy of the data or a direct reference to the array.
-	In the case where a copy is returned and later modified, the setLocation must be called
-	to apply the data.
+	Returns either a new array or internal temporary array with a copy of the data or a
+	direct reference to the array.	In the case where a copy is returned and later modified,
+	the setLocation must be called to apply the data.  The values in the returned array
+	must represent the absolute location of the point.
 	*/
 	public double[] getLocation();
 }

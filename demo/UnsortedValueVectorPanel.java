@@ -33,9 +33,16 @@ public class UnsortedValueVectorPanel extends JPanel {
 	private int current = 0;
 	private int offsety = 0;
 
+	private boolean disabled = true;
+
 	private Color barColor = Color.black;
 	private Color knobDrawColor = Color.black;
 	private Color knobFillColor = Color.blue;
+
+	private Color barColorDisabled = Color.gray;
+	private Color knobDrawColorDisabled = Color.gray;
+	private Color knobFillColorDisabled = Color.gray;
+	private Color valueTextColorDisabled = Color.gray;
 
 	private int barValueGap = 5;
 
@@ -64,6 +71,8 @@ public class UnsortedValueVectorPanel extends JPanel {
 		}
 
 		public void mousePressed(MouseEvent evt) {
+			if (disabled) return;
+
 			mousex = evt.getX();
 			mousey = evt.getY();
 			doubleClick = false;
@@ -73,6 +82,8 @@ public class UnsortedValueVectorPanel extends JPanel {
 		}
 
 		public void mouseReleased(MouseEvent evt) {
+			if (disabled) return;
+
 			mousex = Integer.MIN_VALUE;
 			mousey = Integer.MIN_VALUE;
 			find = true;
@@ -80,6 +91,8 @@ public class UnsortedValueVectorPanel extends JPanel {
 		}
 
 		public void mouseDragged(MouseEvent evt) {
+			if (disabled) return;
+
 			mousex = evt.getX();
 			mousey = evt.getY();
 			repaint();
@@ -177,6 +190,14 @@ public class UnsortedValueVectorPanel extends JPanel {
 		knobFillColor = c;
 	}
 
+	public void setDisabled(boolean b) {
+		disabled = b;
+	}
+
+	public boolean getDisabled() {
+		return disabled;
+	}
+
 	public void paint(Graphics _g) {
 		super.paint(_g);
 
@@ -223,7 +244,11 @@ public class UnsortedValueVectorPanel extends JPanel {
 			}
 		}
 
-		g.setColor(barColor);
+		if (disabled)
+			g.setColor(barColorDisabled);
+		else
+			g.setColor(barColor);
+
 		g.drawRect(left, y, nw - 1, nh);
 
 		double xgap = 0;
@@ -242,7 +267,11 @@ public class UnsortedValueVectorPanel extends JPanel {
 			TextLayout t = new TextLayout(s, g.getFont(), g.getFontRenderContext());
 			int tw = (int) Math.round(t.getAdvance());
 
-			g.setColor(valueTextColor);
+			if (disabled)
+				g.setColor(valueTextColorDisabled);
+			else
+				g.setColor(valueTextColor);
+
 			g.drawString(s, x - tw / 2, ty);
 
 			if (i != n - 1)
@@ -280,9 +309,18 @@ public class UnsortedValueVectorPanel extends JPanel {
 				setValue(current, (1.0 - 1.0 * (mousey - y + offsety) / nh) * (max - min) + min);
 			}
 
-			g.setColor(knobFillColor);
+			if (disabled)
+				g.setColor(knobFillColorDisabled);
+			else
+				g.setColor(knobFillColor);
+
 			g.fill(knobShape);
-			g.setColor(knobDrawColor);
+
+			if (disabled)
+				g.setColor(knobDrawColorDisabled);
+			else
+				g.setColor(knobDrawColor);
+
 			g.draw(knobShape);
 
 			g.translate(-kx, -ky);

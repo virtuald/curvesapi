@@ -1,7 +1,7 @@
 package com.graphbuilder.geom;
 
 /**
-Geom contains static methods for calculating intersections, angles and distances.
+Geom contains static methods for calculating intersections, angles, areas and distances.
 */
 public final class Geom {
 
@@ -341,5 +341,88 @@ public final class Geom {
 		}
 
 		return true;
+	}
+
+
+	/**
+	Returns the area^2 of the triangle formed by three points (x1, y1), (x2, y2) and (x3, y3).
+	*/
+	public static double getTriangleAreaSq(double x1, double y1, double x2, double y2, double x3, double y3) {
+		double ax = x1 - x2;
+		double ay = y1 - y2;
+
+		double bx = x2 - x3;
+		double by = y2 - y3;
+
+		double cx = x3 - x1;
+		double cy = y3 - y1;
+
+		double a = (ax * ax + ay * ay) / 2;
+		double b = (bx * bx + by * by) / 2;
+		double c = (cx * cx + cy * cy) / 2;
+
+		// the following two if statements increase the numerical stability in the
+		// case of "needle" triangles.  'a' is made to be the smallest number.
+
+		if (b < a) {
+			double t = a;
+			a = b;
+			b = t;
+		}
+
+		if (c < a) {
+			double t = a;
+			a = c;
+			c = t;
+		}
+
+		double d = (a + (b - c)) / 2;
+		return a * b - d * d;
+	}
+
+	/**
+	Returns the area^2 of the triangle formed by the 3 side-lengths 'a', 'b' and 'c'.
+
+	@throws IllegalArgumentException if the side-lengths are less than 0 or cannot form a triangle.
+	*/
+	public static double getTriangleAreaSq(double a, double b, double c) {
+		// implementation based on notes from: http://http.cs.berkeley.edu/~wkahan/Triangle.pdf
+		// 1. constraint checking is done
+		// 2. numbers are sorted such that a >= b >= c
+		// 3. stable equation is used to compute the area
+
+		if (a < 0)
+			throw new IllegalArgumentException("a >= 0 required");
+		if (b < 0)
+			throw new IllegalArgumentException("b >= 0 required");
+		if (c < 0)
+			throw new IllegalArgumentException("c >= 0 required");
+
+		if (a > b+c)
+			throw new IllegalArgumentException("a <= b + c required");
+		if (b > a+c)
+			throw new IllegalArgumentException("b <= a + c required");
+		if (c > a+b)
+			throw new IllegalArgumentException("c <= a + b required");
+
+		if (a < c) {
+			double t = c;
+			c = a;
+			a = t;
+		}
+
+		if (b < c) {
+			double t = c;
+			c = b;
+			b = t;
+		}
+
+		if (a < b) {
+			double t = b;
+			b = a;
+			a = t;
+		}
+
+		return (a+(b+c))*(c-(a-b))*(c+(a-b))*(a+(b-c)) / 16.0;
 	}
 }

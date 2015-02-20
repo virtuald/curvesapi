@@ -327,9 +327,11 @@ public class ControlPathPanel extends JPanel implements MouseListener, MouseMoti
 
 		if (showCurves) {
 			//long time = System.currentTimeMillis();
+			//for (int x = 0; x < 100; x++) {
 			multiPath.setNumPoints(0);
 			for (int i = 0; i < cp.numCurves(); i++)
 				cp.getCurve(i).appendTo(multiPath);
+			//}
 			//long dt = System.currentTimeMillis() - time;
 			//System.out.println(dt);
 

@@ -214,10 +214,15 @@ public class EditCurvePanel extends JPanel implements ActionListener, ListSelect
 			int type = knotVectorTypeComboBox.getSelectedIndex();
 			bs.setKnotVectorType(type);
 			useDefaultIntervalCheckBox.setEnabled(type != BSpline.NON_UNIFORM);
+			knotVectorPanel.setDisabled(type != BSpline.NON_UNIFORM);
+			knotVectorPanel.repaint();
 		}
 		else if (src == useWeightVectorCheckBox) {
+			boolean b = useWeightVectorCheckBox.isSelected();
 			NURBSpline ns = (NURBSpline) curveList.getSelectedValue();
-			ns.setUseWeightVector(useWeightVectorCheckBox.isSelected());
+			ns.setUseWeightVector(b);
+			weightVectorPanel.setDisabled(!b);
+			weightVectorPanel.repaint();
 		}
 		else if (src == closeButton) {
 			Window w = SwingUtilities.windowForComponent(this);
@@ -342,8 +347,10 @@ public class EditCurvePanel extends JPanel implements ActionListener, ListSelect
 
 			if (nurbs) {
 				NURBSpline ns = (NURBSpline) bs;
+				boolean b = ns.getUseWeightVector();
 				weightVectorPanel.setValueVector(ns.getWeightVector());
-				useWeightVectorCheckBox.setSelected(ns.getUseWeightVector());
+				useWeightVectorCheckBox.setSelected(b);
+				weightVectorPanel.setDisabled(!b);
 			}
 		}
 		else if (c instanceof CardinalSpline) {
@@ -364,6 +371,8 @@ public class EditCurvePanel extends JPanel implements ActionListener, ListSelect
 			interpolateFirstCheckBox.setSelected(interpolateFirstCheckBox.isSelected());
 			interpolateLastCheckBox.setSelected(interpolateLastCheckBox.isSelected());
 			knotVectorPanel.setValueVector(lc.getKnotVector());
+			knotVectorPanel.setDisabled(false);
+			knotVectorPanel.repaint();
 		}
 		else if (c instanceof NaturalCubicSpline) {
 			editPanel.add(getNaturalCubicSplinePanel(), BorderLayout.CENTER);
