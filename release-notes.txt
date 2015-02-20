@@ -1,0 +1,5 @@
+Curve API (CAPI)
+
+Version: 1.0
+Date: April 1, 2005
+	-Initial release (under the BSD License).
