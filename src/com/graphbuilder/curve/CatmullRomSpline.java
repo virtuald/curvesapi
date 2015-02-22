@@ -41,8 +41,10 @@ public class CatmullRomSpline extends ParametricCurve {
 	If these requirements are not met then this method returns quietly.
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
-		if (gi.getGroupSize() < 4) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");;
+		if (gi.getGroupSize() < 4)
+			throw new IllegalArgumentException("Group iterator size < 4");;
 
 		gi.set(0, 0);
 
@@ -64,7 +66,8 @@ public class CatmullRomSpline extends ParametricCurve {
 			int count_j = gi.count_j();
 
 			for (int i = 0; i < 4; i++) {
-				if (!gi.hasNext()) return;
+				if (!gi.hasNext())
+					throw new IllegalArgumentException("Group iterator ended early");
 				pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 

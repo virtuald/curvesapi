@@ -174,13 +174,15 @@ d[11] = d // only used for closed cubic curves
 
 	/**
 	The requirements for this curve are the group-iterator must be in-range and have a group size of at least 2.
-	If these requirements are not met then this method returns quietly.
+	If these requirements are not met then this method raises IllegalArgumentException
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");
 
 		final int n = gi.getGroupSize();
-		if (n < 2) return;
+		if (n < 2)
+			throw new IllegalArgumentException("Group iterator size < 2");
 
 		int dim = mp.getDimension();
 

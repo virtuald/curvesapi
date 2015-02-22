@@ -64,11 +64,13 @@ public class CardinalSpline extends ParametricCurve {
 
 	/**
 	The requirements for this curve are the group-iterator must be in-range and have a group size of at least 4.
-	If these requirements are not met then this method returns quietly.
+	If these requirements are not met then this method raises IllegalArgumentException
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
-		if (gi.getGroupSize() < 4) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("group iterator not in range");
+		if (gi.getGroupSize() < 4)
+			throw new IllegalArgumentException("more than 4 groups required");
 
 		gi.set(0, 0);
 
@@ -90,7 +92,8 @@ public class CardinalSpline extends ParametricCurve {
 			int count_j = gi.count_j();
 
 			for (int i = 0; i < 4; i++) {
-				if (!gi.hasNext()) return;
+				if (!gi.hasNext())
+					throw new IllegalArgumentException("Group iterator ended early");
 				pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 

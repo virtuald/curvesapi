@@ -17,11 +17,16 @@ However, bugfixes and reasonably scoped improvements will be accepted.
 List of changes
 ---------------
 
+* Version has been bumped to 1.02
 * The javadocs have been removed from this distribution
 * The build scripts have been removed and pom.xml has been added to support
   usage with maven
 * sun.awt.geom.Curve has been copied from OpenJDK to remove dependency on
   JDK internals
+* The 'appendTo' method now raises IllegalArgumentException with useful error
+  messages on invalid arguments instead of swallowing the error
+* A PointFactory has been added to aid in creating points
+* Point2d now extends Point
 
 Licenses
 --------

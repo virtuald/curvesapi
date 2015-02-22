@@ -12,7 +12,8 @@ public class Polyline extends Curve {
 	}
 
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");
 
 		gi.set(0, 0);
 

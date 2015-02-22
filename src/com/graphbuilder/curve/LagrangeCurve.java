@@ -192,8 +192,10 @@ public class LagrangeCurve extends ParametricCurve {
 	to define itself.  If any of these requirements are not met, then this method returns quietly.
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
-		if (baseIndex + baseLength >= knotVector.size()) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");
+		if (baseIndex + baseLength >= knotVector.size())
+			throw new IllegalArgumentException("baseIndex + baseLength >= knotVector.size");
 
 		if (pt.length < knotVector.size())
 			pt = new double[2 * knotVector.size()][];
@@ -204,7 +206,8 @@ public class LagrangeCurve extends ParametricCurve {
 
 		if (baseIndex != 0 && interpolateFirst) {
 			for (int i = 0; i < knotVector.size(); i++) {
-				if (!gi.hasNext()) return;
+				if (!gi.hasNext())
+					throw new IllegalArgumentException("Group iterator ended early");
 				pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 

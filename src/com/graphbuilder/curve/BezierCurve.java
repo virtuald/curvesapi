@@ -132,7 +132,8 @@ public class BezierCurve extends ParametricCurve {
 	The only requirement for this curve is the group-iterator must be in range or this method returns quietly.
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("group iterator not in range");;
 
 		int n = mp.getDimension();
 

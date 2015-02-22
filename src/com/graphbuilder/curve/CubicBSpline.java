@@ -171,12 +171,14 @@ public class CubicBSpline extends ParametricCurve {
 
 	/**
 	The requirements for this curve are the group-iterator must be in-range and have a group size of at least 4.
-	If these requirements are not met then this method returns quietly.
+	If these requirements are not met then this method throws IllegalArgumentException
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");
 		int n = gi.getGroupSize();
-		if (n < 4) return;
+		if (n < 4)
+			throw new IllegalArgumentException("Group iterator size < 4");
 
 		if (interpolateEndpoints) {
 			numPoints = n;

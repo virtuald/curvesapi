@@ -104,7 +104,8 @@ public class NURBSpline extends BSpline {
 	@see com.graphbuilder.curve.BSpline#appendTo(MultiPath)
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");
 		int numPts = gi.getGroupSize();
 
 		if (nw.length < numPts) {
@@ -113,11 +114,13 @@ public class NURBSpline extends BSpline {
 		}
 
 		if (useWeightVector) {
-			if (weightVector.size() != numPts) return;
+			if (weightVector.size() != numPts)
+				throw new IllegalArgumentException("weightVector.size(" + weightVector.size() + ") != group iterator size(" + numPts + ")");
 
 			for (int i = 0; i < numPts; i++) {
 				weight[i] = weightVector.get(i);
-				if (weight[i] < 0) return;
+				if (weight[i] < 0)
+					throw new IllegalArgumentException("Negative weight not allowed");
 			}
 		}
 		else {

@@ -238,14 +238,16 @@ public class BSpline extends ParametricCurve {
 	an exact size of degree + numPts + 1, where degree is specified by the setDegree method and numPts is the
 	group size.  Also, the knot-vector values must be non-decreasing.
 
-	If any of these requirements are not met, then this method returns quietly.
+	If any of these requirements are not met, then IllegalArgumentException is thrown
 	*/
 	public void appendTo(MultiPath mp) {
-		if (!gi.isInRange(0, cp.numPoints())) return;
+		if (!gi.isInRange(0, cp.numPoints()))
+			throw new IllegalArgumentException("Group iterator not in range");
 
 		int numPts = gi.getGroupSize();
 		int f = numPts - degree;
-		if (f < 0) return;
+		if (f < 0)
+			throw new IllegalArgumentException("group iterator size - degree < 0");
 
 		int x = numPts + degree;
 
@@ -256,13 +258,15 @@ public class BSpline extends ParametricCurve {
 		double t2 = t_max;
 
 		if (knotVectorType == NON_UNIFORM) {
-			if (knotVector.size() != x) return;
+			if (knotVector.size() != x)
+				throw new IllegalArgumentException("knotVector.size(" + knotVector.size() + ") != " + x);
 
 			knot[0] = knotVector.get(0);
 
 			for (int i = 1; i < x; i++) {
 				knot[i] = knotVector.get(i);
-				if (knot[i] < knot[i-1]) return;
+				if (knot[i] < knot[i-1])
+					throw new IllegalArgumentException("Knot not in sorted order! (knot[" + i + "] < knot[" + i + "-1])");
 			}
 		}
 		else if (knotVectorType == UNIFORM_UNCLAMPED) {
