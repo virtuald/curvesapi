@@ -17,7 +17,7 @@ However, bugfixes and reasonably scoped improvements will be accepted.
 List of changes
 ---------------
 
-* Version has been bumped to 1.02
+* Version has been bumped to 1.03
 * The javadocs have been removed from this distribution
 * The build scripts have been removed and pom.xml has been added to support
   usage with maven
