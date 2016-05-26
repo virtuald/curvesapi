@@ -34,6 +34,7 @@ package com.graphbuilder.curve;
 import java.awt.*;
 import java.awt.geom.*;
 import com.graphbuilder.geom.Geom;
+import com.graphbuilder.org.apache.harmony.awt.gl.Crossing;
 
 /**
 The ShapeMultiPath is-a MultiPath and implements the java.awt.Shape interface.
@@ -245,7 +246,7 @@ public class ShapeMultiPath extends MultiPath implements Shape {
 	Returns true if the point is contained inside the shape. Otherwise false is returned.
 	*/
 	public boolean contains(double x, double y) {
-		int cross = com.graphbuilder.sun.awt.geom.Curve.pointCrossingsForPath(getPathIterator(null), x, y);
+		int cross = Crossing.crossPath(getPathIterator(null), x, y);
 
 		if (windingRule == PathIterator.WIND_NON_ZERO)
 			return cross != 0;
