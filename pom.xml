@@ -8,7 +8,6 @@
   <url>https://github.com/virtuald/curvesapi</url>
 
   <build>
-    <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
