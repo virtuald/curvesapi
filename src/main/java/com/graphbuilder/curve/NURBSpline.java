@@ -50,8 +50,17 @@ must be >= 0.
 */
 public class NURBSpline extends BSpline {
 
-	private static double[] nw = new double[0]; // (required length >= numPts)
-	private static double[] weight = new double[0]; // (required length >= numPts)
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+
+	private static class SharedData {
+		private double[] nw = new double[0]; // (required length >= numPts)
+		private double[] weight = new double[0]; // (required length >= numPts)
+	}
 
 	private ValueVector weightVector = new ValueVector(new double[] { 1, 1, 1, 1 }, 4);
 	private boolean useWeightVector = true;
@@ -68,8 +77,8 @@ public class NURBSpline extends BSpline {
 		int numPts = gi.getGroupSize();
 
 		for (int i = 0; i < numPts; i++) {
-			nw[i] = N(t, i) * weight[i];
-			sum2 += nw[i];
+			sharedData.nw[i] = N(t, i) * sharedData.weight[i];
+			sum2 += sharedData.nw[i];
 		}
 
 		if (sum2 == 0) sum2 = 1;
@@ -79,7 +88,7 @@ public class NURBSpline extends BSpline {
 			gi.set(0,0);
 
 			for (int j = 0; j < numPts; j++)
-				sum1 += nw[j] * cp.getPoint(gi.next()).getLocation()[i];
+				sum1 += sharedData.nw[j] * cp.getPoint(gi.next()).getLocation()[i];
 
 			p[i] = sum1 / sum2;
 		}
@@ -139,9 +148,9 @@ public class NURBSpline extends BSpline {
 			throw new IllegalArgumentException("Group iterator not in range");
 		int numPts = gi.getGroupSize();
 
-		if (nw.length < numPts) {
-			nw = new double[2 * numPts];
-			weight = new double[2 * numPts];
+		if (sharedData.nw.length < numPts) {
+			sharedData.nw = new double[2 * numPts];
+			sharedData.weight = new double[2 * numPts];
 		}
 
 		if (useWeightVector) {
@@ -149,14 +158,14 @@ public class NURBSpline extends BSpline {
 				throw new IllegalArgumentException("weightVector.size(" + weightVector.size() + ") != group iterator size(" + numPts + ")");
 
 			for (int i = 0; i < numPts; i++) {
-				weight[i] = weightVector.get(i);
-				if (weight[i] < 0)
+				sharedData.weight[i] = weightVector.get(i);
+				if (sharedData.weight[i] < 0)
 					throw new IllegalArgumentException("Negative weight not allowed");
 			}
 		}
 		else {
 			for (int i = 0; i < numPts; i++)
-				weight[i] = 1;
+				sharedData.weight[i] = 1;
 		}
 
 		super.appendTo(mp);
@@ -164,9 +173,9 @@ public class NURBSpline extends BSpline {
 
 	public void resetMemory() {
 		super.resetMemory();
-		if (nw.length > 0) {
-			nw = new double[0];
-			weight = new double[0];
+		if (sharedData.nw.length > 0) {
+			sharedData.nw = new double[0];
+			sharedData.weight = new double[0];
 		}
 	}
 }

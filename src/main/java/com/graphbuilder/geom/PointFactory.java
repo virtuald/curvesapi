@@ -41,29 +41,24 @@ public class PointFactory {
 			pts = new double[]{x, y};
 		}
 		
-		@Override
 		public double getX() {
 			return pts[0];
 		}
 
-		@Override
 		public double getY() {
 			return pts[1];
 		}
 
-		@Override
 		public void setLocation(double[] p) {
 			pts[0] = p[0];
 			pts[1] = p[1];
 		}
 		
-		@Override
 		public void setLocation(double x, double y) {
 			pts[0] = x;
 			pts[1] = y;
 		}
 
-		@Override
 		public double[] getLocation() {
 			return pts;
 		}

@@ -68,7 +68,16 @@ public class LagrangeCurve extends ParametricCurve {
 	private boolean interpolateFirst = false;
 	private boolean interpolateLast = false;
 
-	private static double[][] pt = new double[0][];
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+	
+	private static class SharedData {
+		private double[][] pt = new double[0][];
+	}
 
 	/**
 	Creates a LagrangeCurve with knot vector [0, 1/3, 2/3, 1], baseIndex == 1, baseLength == 1,
@@ -194,7 +203,7 @@ public class LagrangeCurve extends ParametricCurve {
 		int n = knotVector.size();
 
 		for (int i = 0; i < n; i++) {
-			double[] q = pt[i];
+			double[] q = sharedData.pt[i];
 			double L = L(t, i);
 			for (int j = 0; j < p.length - 1; j++)
 				p[j] += q[j] * L;
@@ -228,8 +237,8 @@ public class LagrangeCurve extends ParametricCurve {
 		if (baseIndex + baseLength >= knotVector.size())
 			throw new IllegalArgumentException("baseIndex + baseLength >= knotVector.size");
 
-		if (pt.length < knotVector.size())
-			pt = new double[2 * knotVector.size()][];
+		if (sharedData.pt.length < knotVector.size())
+			sharedData.pt = new double[2 * knotVector.size()][];
 
 		gi.set(0, 0);
 
@@ -239,7 +248,7 @@ public class LagrangeCurve extends ParametricCurve {
 			for (int i = 0; i < knotVector.size(); i++) {
 				if (!gi.hasNext())
 					throw new IllegalArgumentException("Group iterator ended early");
-				pt[i] = cp.getPoint(gi.next()).getLocation();
+				sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 
 			b = doBCAA(mp, knotVector.get(0), knotVector.get(baseIndex), b);
@@ -266,7 +275,7 @@ public class LagrangeCurve extends ParametricCurve {
 				}
 
 				if (!gi.hasNext()) break;
-				pt[j] = cp.getPoint(gi.next()).getLocation();
+				sharedData.pt[j] = cp.getPoint(gi.next()).getLocation();
 				i++;
 			}
 
@@ -290,7 +299,7 @@ public class LagrangeCurve extends ParametricCurve {
 					System.out.println("not enough points to interpolate last");
 					return;
 				}
-				pt[i] = cp.getPoint(gi.next()).getLocation();
+				sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 
 			doBCAA(mp, knotVector.get(baseIndex + baseLength), knotVector.get(knotVector.size() - 1), b);
@@ -322,7 +331,7 @@ public class LagrangeCurve extends ParametricCurve {
 	}
 
 	public void resetMemory() {
-		if (pt.length > 0)
-			pt = new double[0][];
+		if (sharedData.pt.length > 0)
+			sharedData.pt = new double[0][];
 	}
 }

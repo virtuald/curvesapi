@@ -40,7 +40,16 @@ implementation.
 */
 public class CatmullRomSpline extends ParametricCurve {
 
-	private static double[][] pt = new double[4][];
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+
+	private static class SharedData {
+		private double[][] pt = new double[4][];
+	}
 
 	public CatmullRomSpline(ControlPath cp, GroupIterator gi) {
 		super(cp, gi);
@@ -54,9 +63,9 @@ public class CatmullRomSpline extends ParametricCurve {
 		// Note: The 0.5 does NOT represent alpha. It is a result of the simplification.
 
 		for (int i = 0; i < p.length - 1; i++) {
-			p[i] = 0.5 * ((pt[3][i] - pt[0][i] + 3 * (pt[1][i] - pt[2][i])) * t3
-				+ (2 * (pt[0][i] + 2*pt[2][i]) - 5*pt[1][i] - pt[3][i]) * t2
-				+ (pt[2][i] - pt[0][i]) * t) + pt[1][i];
+			p[i] = 0.5 * ((sharedData.pt[3][i] - sharedData.pt[0][i] + 3 * (sharedData.pt[1][i] - sharedData.pt[2][i])) * t3
+				+ (2 * (sharedData.pt[0][i] + 2*sharedData.pt[2][i]) - 5*sharedData.pt[1][i] - sharedData.pt[3][i]) * t2
+				+ (sharedData.pt[2][i] - sharedData.pt[0][i]) * t) + sharedData.pt[1][i];
 		}
 	}
 
@@ -80,7 +89,7 @@ public class CatmullRomSpline extends ParametricCurve {
 		gi.set(0, 0);
 
 		for (int i = 0; i < 4; i++)
-			pt[i] = cp.getPoint(gi.next()).getLocation();
+			sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 
 		double[] d = new double[mp.getDimension() + 1];
 		eval(d);
@@ -99,7 +108,7 @@ public class CatmullRomSpline extends ParametricCurve {
 			for (int i = 0; i < 4; i++) {
 				if (!gi.hasNext())
 					throw new IllegalArgumentException("Group iterator ended early");
-				pt[i] = cp.getPoint(gi.next()).getLocation();
+				sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 
 			gi.set(index_i, count_j);
