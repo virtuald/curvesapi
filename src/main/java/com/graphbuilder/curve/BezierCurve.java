@@ -52,10 +52,21 @@ represent the result of 1031 choose i, where i = [500, 530].
 
 public class BezierCurve extends ParametricCurve {
 
-	// a[] is required to compute (1 - t)^n starting from the last index.
-	// The idea is that all Bezier curves can share the same array, which
-	// is more memory efficient than each Bezier curve having its own array.
-	private static double[] a = new double[0];
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+	private final PascalsTriangle pascalsTriangle = new PascalsTriangle();
+	
+	private static class SharedData {
+		// a[] is required to compute (1 - t)^n starting from the last index.
+		// The idea is that all Bezier curves can share the same array, which
+		// is more memory efficient than each Bezier curve having its own array.
+		private double[] a = new double[0];
+	}
+	
 
 	private double t_min = 0.0;
 	private double t_max = 1.0;
@@ -70,22 +81,22 @@ public class BezierCurve extends ParametricCurve {
 
 		int numPts = gi.getGroupSize();
 
-		if (numPts > a.length)
-			a = new double[2 * numPts];
+		if (numPts > sharedData.a.length)
+			sharedData.a = new double[2 * numPts];
 
-		a[numPts - 1] = 1;
+		sharedData.a[numPts - 1] = 1;
 		double b = 1.0;
 		double one_minus_t = 1.0 - t;
 
 		for (int i = numPts - 2; i >= 0; i--)
-			a[i] = a[i+1] * one_minus_t;
+			sharedData.a[i] = sharedData.a[i+1] * one_minus_t;
 
 		gi.set(0, 0);
 
 		int i = 0;
 
 		while (i < numPts) {
-			double pt = PascalsTriangle.nCr(numPts - 1, i);
+			double pt = pascalsTriangle.nCr(numPts - 1, i);
 
 			if (Double.isInfinite(pt) || Double.isNaN(pt)) {
 				// are there any techniques that can be used
@@ -93,7 +104,7 @@ public class BezierCurve extends ParametricCurve {
 				// 1031 choose 515 == infinity
 			}
 			else {
-				double gravity = a[i] * b * pt;
+				double gravity = sharedData.a[i] * b * pt;
 				double[] d = cp.getPoint(gi.next()).getLocation();
 
 				for (int j = 0; j < p.length - 1; j++)
@@ -181,7 +192,7 @@ public class BezierCurve extends ParametricCurve {
 	}
 
 	public void resetMemory() {
-		if (a.length > 0)
-			a = new double[0];
+		if (sharedData.a.length > 0)
+			sharedData.a = new double[0];
 	}
 }

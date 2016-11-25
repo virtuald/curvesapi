@@ -61,9 +61,18 @@ d[10] = c
 d[11] = d // only used for closed cubic curves
 */
 
-	private static double[][] pt = new double[0][];
-	private static double[][] data = new double[0][];
-	private static int ci = 0;
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+
+	private static class SharedData {
+		private double[][] pt = new double[0][];
+		private double[][] data = new double[0][];
+		private int ci = 0;
+	}
 
 	private boolean closed = false;
 
@@ -80,33 +89,33 @@ d[11] = d // only used for closed cubic curves
 
 		int j = 0;
 		for (int i = 0; i < n; i++)
-			p[i] = data[j++][ci] + data[j++][ci] * t + data[j++][ci] * t2 + data[j++][ci] * t3;
+			p[i] = sharedData.data[j++][sharedData.ci] + sharedData.data[j++][sharedData.ci] * t + sharedData.data[j++][sharedData.ci] * t2 + sharedData.data[j++][sharedData.ci] * t3;
 	}
 
 	// n is the # of points
 	// dim is the dimension
-	private static void precalc(int n, int dim, boolean closed) {
+	private void precalc(int n, int dim, boolean closed) {
 		n--;
 
-		double[] a = data[4 * dim];
-		double[] b = data[4 * dim + 1];
-		double[] c = data[4 * dim + 2];
+		double[] a = sharedData.data[4 * dim];
+		double[] b = sharedData.data[4 * dim + 1];
+		double[] c = sharedData.data[4 * dim + 2];
 		int k = 0;
 
 		if (closed) {
-			double[] d = data[4 * dim + 3];
+			double[] d = sharedData.data[4 * dim + 3];
 			double e, f, g, h;
 
 			for (int j = 0; j < dim; j++) {
 				d[1] = a[1] = e = 0.25;
-				b[0] = e * 3 * (pt[1][j] - pt[n][j]);
+				b[0] = e * 3 * (sharedData.pt[1][j] - sharedData.pt[n][j]);
 				h = 4;
-				f = 3 * (pt[0][j] - pt[n-1][j]);
+				f = 3 * (sharedData.pt[0][j] - sharedData.pt[n-1][j]);
 				g = 1;
 				for (int i = 1; i < n; i++) {
 					a[i+1] = e = 1.0 / (4.0 - a[i]);
 					d[i+1] = -e * d[i];
-					b[i] = e * (3.0 * (pt[i+1][j] - pt[i-1][j]) - b[i-1]);
+					b[i] = e * (3.0 * (sharedData.pt[i+1][j] - sharedData.pt[i-1][j]) - b[i-1]);
 					h = h - g * d[i];
 					f = f - g * b[i-1];
 					g = -a[i] * g;
@@ -120,22 +129,22 @@ d[11] = d // only used for closed cubic curves
 					c[i] = b[i] - a[i+1] * c[i+1] - d[i+1] * c[n];
 				}
 
-				double[] w = data[k++];
-				double[] x = data[k++];
-				double[] y = data[k++];
-				double[] z = data[k++];
+				double[] w = sharedData.data[k++];
+				double[] x = sharedData.data[k++];
+				double[] y = sharedData.data[k++];
+				double[] z = sharedData.data[k++];
 
 				for (int i = 0; i < n; i++) {
-					w[i] = pt[i][j];
+					w[i] = sharedData.pt[i][j];
 					x[i] = c[i];
-					y[i] = 3 * (pt[i+1][j] - pt[i][j]) - 2 * c[i] - c[i+1];
-					z[i] = 2 * (pt[i][j] - pt[i+1][j]) + c[i] + c[i+1];
+					y[i] = 3 * (sharedData.pt[i+1][j] - sharedData.pt[i][j]) - 2 * c[i] - c[i+1];
+					z[i] = 2 * (sharedData.pt[i][j] - sharedData.pt[i+1][j]) + c[i] + c[i+1];
 				}
 
-				w[n] = pt[n][j];
+				w[n] = sharedData.pt[n][j];
 				x[n] = c[n];
-				y[n] = 3 * (pt[0][j] - pt[n][j]) - 2 * c[n] - c[0];
-				z[n] = 2 * (pt[n][j] - pt[0][j]) + c[n] + c[0];
+				y[n] = 3 * (sharedData.pt[0][j] - sharedData.pt[n][j]) - 2 * c[n] - c[0];
+				z[n] = 2 * (sharedData.pt[n][j] - sharedData.pt[0][j]) + c[n] + c[0];
 			}
 		}
 		else {
@@ -146,30 +155,30 @@ d[11] = d // only used for closed cubic curves
 				}
 				a[n] = 1.0 / (2.0 - a[n-1]);
 
-				b[0] = a[0] * (3 * (pt[1][j] - pt[0][j]));
+				b[0] = a[0] * (3 * (sharedData.pt[1][j] - sharedData.pt[0][j]));
 				for (int i = 1; i < n; i++) {
-					b[i] = a[i] * (3 * (pt[i+1][j] - pt[i-1][j]) - b[i-1]);
+					b[i] = a[i] * (3 * (sharedData.pt[i+1][j] - sharedData.pt[i-1][j]) - b[i-1]);
 				}
-				b[n] = a[n] * (3 * (pt[n][j] - pt[n-1][j]) - b[n-1]);
+				b[n] = a[n] * (3 * (sharedData.pt[n][j] - sharedData.pt[n-1][j]) - b[n-1]);
 
 				c[n] = b[n];
 				for (int i = n-1; i >= 0; i--) {
 					c[i] = b[i] - a[i] * c[i+1];
 				}
 
-				double[] w = data[k++];
-				double[] x = data[k++];
-				double[] y = data[k++];
-				double[] z = data[k++];
+				double[] w = sharedData.data[k++];
+				double[] x = sharedData.data[k++];
+				double[] y = sharedData.data[k++];
+				double[] z = sharedData.data[k++];
 
 				for (int i = 0; i < n; i++) {
-					w[i] = pt[i][j];
+					w[i] = sharedData.pt[i][j];
 					x[i] = c[i];
-					y[i] = 3 * (pt[i+1][j] - pt[i][j]) - 2 * c[i] - c[i+1];
-					z[i] = 2 * (pt[i][j] - pt[i+1][j]) + c[i] + c[i+1];
+					y[i] = 3 * (sharedData.pt[i+1][j] - sharedData.pt[i][j]) - 2 * c[i] - c[i+1];
+					z[i] = 2 * (sharedData.pt[i][j] - sharedData.pt[i+1][j]) + c[i] + c[i+1];
 				}
 
-				w[n] = pt[n][j];
+				w[n] = sharedData.pt[n][j];
 				x[n] = 0;
 				y[n] = 0;
 				z[n] = 0;
@@ -221,33 +230,33 @@ d[11] = d // only used for closed cubic curves
 		//-------------------------------------------------------
 		int x = 3 + 4 * dim + 1;
 
-		if (data.length < x) {
+		if (sharedData.data.length < x) {
 			double[][] temp = new double[x][];
 
-			for (int i = 0; i < data.length; i++)
-				temp[i] = data[i];
+			for (int i = 0; i < sharedData.data.length; i++)
+				temp[i] = sharedData.data[i];
 
-			data = temp;
+			sharedData.data = temp;
 		}
 
-		if (pt.length < n) {
+		if (sharedData.pt.length < n) {
 			int m = 2 * n;
 
-			pt = new double[m][];
+			sharedData.pt = new double[m][];
 
-			for (int i = 0; i < data.length; i++)
-				data[i] = new double[m];
+			for (int i = 0; i < sharedData.data.length; i++)
+				sharedData.data[i] = new double[m];
 		}
 		//-------------------------------------------------------
 
 		gi.set(0, 0);
 
 		for (int i = 0; i < n; i++)
-			pt[i] = cp.getPoint(gi.next()).getLocation(); // assign the used points to pt
+			sharedData.pt[i] = cp.getPoint(gi.next()).getLocation(); // assign the used points to pt
 
 		precalc(n, dim, closed);
 
-		ci = 0; // do not remove
+		sharedData.ci = 0; // do not remove
 
 		double[] p = new double[dim + 1];
 		eval(p);
@@ -259,16 +268,16 @@ d[11] = d // only used for closed cubic curves
 
 		// Note: performing a ci++ or ci = ci + 1 results in funny behavior
 		for (int i = 0; i < n; i++) {
-			ci = i;
+			sharedData.ci = i;
 			BinaryCurveApproximationAlgorithm.genPts(this, 0.0, 1.0, mp);
 		}
 	}
 
 	public void resetMemory() {
-		if (pt.length > 0)
-			pt = new double[0][];
+		if (sharedData.pt.length > 0)
+			sharedData.pt = new double[0][];
 
-		if (data.length > 0)
-			data = new double[0][];
+		if (sharedData.data.length > 0)
+			sharedData.data = new double[0][];
 	}
 }

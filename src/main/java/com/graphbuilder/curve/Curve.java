@@ -62,6 +62,8 @@ are generated.
 store the results of computations.  The reason this is done is to avoid using excessive memory.
 However, none of the methods in the curve package are synchronized.  Thus, multiple threads should
 not be appending curves to multi-paths, otherwise the results of computations will be overwritten.
+These static memory blocks are stored as thread local variables and retrieved in the constructor with almost zero overhead, 
+so thread safe parallel usage is possible as long as multiple threads do not share or reuse the same curve instance.
 
 @see com.graphbuilder.curve.MultiPath
 @see com.graphbuilder.curve.ControlPath

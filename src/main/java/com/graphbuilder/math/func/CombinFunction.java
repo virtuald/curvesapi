@@ -39,6 +39,8 @@ The combination function.
 @see com.graphbuilder.math.PascalsTriangle
 */
 public class CombinFunction implements Function {
+	
+	private final PascalsTriangle pascalsTriangle = new PascalsTriangle();
 
 	public CombinFunction() {}
 
@@ -49,7 +51,7 @@ public class CombinFunction implements Function {
 	public double of(double[] d, int numParam) {
 		int n = (int) d[0];
 		int r = (int) d[1];
-		return PascalsTriangle.nCr(n, r);
+		return pascalsTriangle.nCr(n, r);
 	}
 
 	/**

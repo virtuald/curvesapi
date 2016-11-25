@@ -31,6 +31,7 @@
 
 package com.graphbuilder.curve;
 
+
 /**
 <p>The Cardinal-spline passes through the points in the control-path specified by the group-iterator.
 However, the curve does not pass through the first or the last control-point, it begins at the
@@ -46,7 +47,16 @@ CardinalSpline.
 */
 public class CardinalSpline extends ParametricCurve {
 
-	private static double[][] pt = new double[4][];
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+
+	private static class SharedData {
+		private double[][] pt = new double[4][];
+	}
 
 	private double alpha = 0.5;
 
@@ -65,7 +75,7 @@ public class CardinalSpline extends ParametricCurve {
 		double d = alpha * (t3 - t2);
 
 		for (int i = 0; i < p.length - 1; i++)
-			p[i] = a * pt[1][i] + b * pt[2][i] + c * (pt[2][i] - pt[0][i]) + d * (pt[3][i] - pt[1][i]);
+			p[i] = a * sharedData.pt[1][i] + b * sharedData.pt[2][i] + c * (sharedData.pt[2][i] - sharedData.pt[0][i]) + d * (sharedData.pt[3][i] - sharedData.pt[1][i]);
 	}
 
 	/**
@@ -106,7 +116,7 @@ public class CardinalSpline extends ParametricCurve {
 		gi.set(0, 0);
 
 		for (int i = 0; i < 4; i++)
-			pt[i] = cp.getPoint(gi.next()).getLocation();
+			sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 
 		double[] d = new double[mp.getDimension() + 1];
 		eval(d);
@@ -125,7 +135,7 @@ public class CardinalSpline extends ParametricCurve {
 			for (int i = 0; i < 4; i++) {
 				if (!gi.hasNext())
 					throw new IllegalArgumentException("Group iterator ended early");
-				pt[i] = cp.getPoint(gi.next()).getLocation();
+				sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 
 			gi.set(index_i, count_j);

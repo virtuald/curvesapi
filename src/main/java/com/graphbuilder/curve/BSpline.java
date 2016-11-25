@@ -31,6 +31,7 @@
 
 package com.graphbuilder.curve;
 
+
 /**
 <p>General non-rational B-Spline implementation where the degree can be specified.
 
@@ -77,10 +78,19 @@ public class BSpline extends ParametricCurve {
 	public static final int UNIFORM_CLAMPED = 0;
 	public static final int UNIFORM_UNCLAMPED = 1;
 	public static final int NON_UNIFORM = 2;
+	
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
 
-	private static int[] a = new int[0]; // counter used for the a-function values (required length >= degree)
-	private static int[] c = new int[0]; // counter used for bit patterns (required length >= degree)
-	private static double[] knot = new double[0]; // (required length >= numPts + degree)
+	private static class SharedData {
+		private int[] a = new int[0]; // counter used for the a-function values (required length >= degree)
+		private int[] c = new int[0]; // counter used for bit patterns (required length >= degree)
+		private double[] knot = new double[0]; // (required length >= numPts + degree)
+	}
 
 	private ValueVector knotVector = new ValueVector(new double[] { 0, 0, 0, 0, 1, 1, 1, 1 }, 8);
 	private double t_min = 0.0;
@@ -282,8 +292,8 @@ public class BSpline extends ParametricCurve {
 
 		int x = numPts + degree;
 
-		if (knot.length < x)
-			knot = new double[2 * x];
+		if (sharedData.knot.length < x)
+			sharedData.knot = new double[2 * x];
 
 		double t1 = t_min;
 		double t2 = t_max;
@@ -292,11 +302,11 @@ public class BSpline extends ParametricCurve {
 			if (knotVector.size() != x)
 				throw new IllegalArgumentException("knotVector.size(" + knotVector.size() + ") != " + x);
 
-			knot[0] = knotVector.get(0);
+			sharedData.knot[0] = knotVector.get(0);
 
 			for (int i = 1; i < x; i++) {
-				knot[i] = knotVector.get(i);
-				if (knot[i] < knot[i-1])
+				sharedData.knot[i] = knotVector.get(i);
+				if (sharedData.knot[i] < sharedData.knot[i-1])
 					throw new IllegalArgumentException("Knot not in sorted order! (knot[" + i + "] < knot[" + i + "-1])");
 			}
 		}
@@ -305,7 +315,7 @@ public class BSpline extends ParametricCurve {
 			double grad = 1.0 / (x - 1);
 
 			for (int i = 0; i < x; i++)
-				knot[i] = i * grad;
+				sharedData.knot[i] = i * grad;
 
 			if (useDefaultInterval) {
 				t1 = (degree - 1) * grad;
@@ -316,14 +326,14 @@ public class BSpline extends ParametricCurve {
 			double grad = 1.0 / (f + 1);
 
 			for (int i = 0; i < degree; i++)
-				knot[i] = 0;
+				sharedData.knot[i] = 0;
 
 			int j = degree;
 			for (int i = 1; i <= f; i++)
-				knot[j++] = i * grad;
+				sharedData.knot[j++] = i * grad;
 
 			for (int i = j; i < x; i++)
-				knot[i] = 1.0;
+				sharedData.knot[i] = 1.0;
 
 			if (useDefaultInterval) {
 				t1 = 0.0;
@@ -331,9 +341,9 @@ public class BSpline extends ParametricCurve {
 			}
 		}
 
-		if (a.length < degree) {
-			a = new int[2 * degree];
-			c = new int[2 * degree];
+		if (sharedData.a.length < degree) {
+			sharedData.a = new int[2 * degree];
+			sharedData.c = new int[2 * degree];
 		}
 
 		double[] p = new double[mp.getDimension() + 1];
@@ -356,47 +366,47 @@ public class BSpline extends ParametricCurve {
 		double d = 0;
 
 		for (int j = 0; j < degree; j++) {
-			double t1 = knot[i+j];
-			double t2 = knot[i+j+1];
+			double t1 = sharedData.knot[i+j];
+			double t2 = sharedData.knot[i+j+1];
 
 			if (t >= t1 && t <= t2 && t1 != t2) {
 
 				int dm2 = degree - 2;
 
 				for (int k = degree - j - 1; k >= 0; k--)
-					a[k] = 0;
+					sharedData.a[k] = 0;
 
 				if (j > 0) {
 					for (int k = 0; k < j; k++)
-						c[k] = k;
-					c[j] = Integer.MAX_VALUE;
+						sharedData.c[k] = k;
+					sharedData.c[j] = Integer.MAX_VALUE;
 				}
 				else {
-					c[0] = dm2;
-					c[1] = degree;
+					sharedData.c[0] = dm2;
+					sharedData.c[1] = degree;
 				}
 
 				int z = 0;
 
 				while (true) {
-					if (c[z] < c[z+1] - 1) {
+					if (sharedData.c[z] < sharedData.c[z+1] - 1) {
 						double e = 1.0;
 						int bc = 0;
 						int y = dm2 - j;
 						int p = j - 1;
 
 						for (int m = dm2, n = degree; m >= 0; m--, n--) {
-							if (p >= 0 && c[p] == m) {
+							if (p >= 0 && sharedData.c[p] == m) {
 								int w = i + bc;
-								double kd = knot[w+n];
-								e *= (kd - t) / (kd - knot[w+1]);
+								double kd = sharedData.knot[w+n];
+								e *= (kd - t) / (kd - sharedData.knot[w+1]);
 								bc++;
 								p--;
 							}
 							else {
-								int w = i + a[y];
-								double kw = knot[w];
-								e *= (t - kw) / (knot[w+n-1] - kw);
+								int w = i + sharedData.a[y];
+								double kw = sharedData.knot[w];
+								e *= (t - kw) / (sharedData.knot[w+n-1] - kw);
 								y--;
 							}
 						}
@@ -407,16 +417,16 @@ public class BSpline extends ParametricCurve {
 							boolean reset = false;
 
 							while (true) {
-								a[g]++;
+								sharedData.a[g]++;
 
-								if (a[g] > j) {
+								if (sharedData.a[g] > j) {
 									g++;
 									reset = true;
 								}
 								else {
 									if (reset) {
 										for (int h = g - 1; h >= 0; h--)
-											a[h] = a[g];
+											sharedData.a[h] = sharedData.a[g];
 									}
 									break;
 								}
@@ -426,11 +436,11 @@ public class BSpline extends ParametricCurve {
 						d += e;
 
 						// this code updates the bit-counter
-						c[z]++;
-						if (c[z] > dm2) break;
+						sharedData.c[z]++;
+						if (sharedData.c[z] > dm2) break;
 
 						for (int k = 0; k < z; k++)
-							c[k] = k;
+							sharedData.c[k] = k;
 						z = 0;
 					}
 					else {
@@ -478,12 +488,12 @@ public class BSpline extends ParametricCurve {
 	}*/
 
 	public void resetMemory() {
-		if (a.length > 0) {
-			a = new int[0];
-			c = new int[0];
+		if (sharedData.a.length > 0) {
+			sharedData.a = new int[0];
+			sharedData.c = new int[0];
 		}
 
-		if (knot.length > 0)
-			knot = new double[0];
+		if (sharedData.knot.length > 0)
+			sharedData.knot = new double[0];
 	}
 }

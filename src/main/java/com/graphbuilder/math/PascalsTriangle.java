@@ -31,15 +31,25 @@
 
 package com.graphbuilder.math;
 
+
 /**
 PascalsTriangle can be used for O(1) lookup of the nCr function.
 */
 public final class PascalsTriangle {
+	
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+	
+	private static class SharedData {
+		private double[][] pt = new double[][] { {1} };
+	}
 
-	private PascalsTriangle() {};
-
-	private static double[][] pt = new double[][] { {1} };
-
+	public PascalsTriangle() {}
+	
 	/**
 	The nCr function returns the number of ways r things can be chosen from a set of size n.
 	Mathematically, it is defined as: n! / (r! * (n - r)!)
@@ -51,21 +61,21 @@ public final class PascalsTriangle {
 	If the value of n or r is less than 0 or the value of r is greater than n then 0 is
 	returned.
 	*/
-	public synchronized static double nCr(int n, int r) {
+	public  double nCr(int n, int r) {
 		if (n < 0 || r < 0 || r > n) return 0;
 
-		if (n >= pt.length) {
-			int d = 2 * pt.length;
+		if (n >= sharedData.pt.length) {
+			int d = 2 * sharedData.pt.length;
 			double[][] pt2 = null;
 			if (n > d)
 				pt2 = new double[n + 1][];
 			else
 				pt2 = new double[d + 1][];
 
-			for (int i = 0; i < pt.length; i++)
-				pt2[i] = pt[i];
+			for (int i = 0; i < sharedData.pt.length; i++)
+				pt2[i] = sharedData.pt[i];
 
-			for (int i = pt.length; i < pt2.length; i++) {
+			for (int i = sharedData.pt.length; i < pt2.length; i++) {
 				pt2[i] = new double[(i / 2) + 1];
 
 				pt2[i][0] = 1;
@@ -80,19 +90,19 @@ public final class PascalsTriangle {
 					pt2[i][j] = x;
 				}
 			}
-			pt = pt2;
+			sharedData.pt = pt2;
 		}
 
 		if (2 * r > n)
 			r = n - r;
 
-		return pt[n][r];
+		return sharedData.pt[n][r];
 	}
 
 	/**
 	Resets the internal array to the initial state to free up memory.
 	*/
-	public synchronized static void reset() {
-		pt = new double[][] { {1} };
+	public  void reset() {
+		sharedData.pt = new double[][] { {1} };
 	}
 }

@@ -31,6 +31,7 @@
 
 package com.graphbuilder.curve;
 
+
 /**
 <p>The cubic B-spline is defined by third order polynomial basis functions.  Each point on the curve
 is locally controlled by 4 control-points.  In general, the curve does not pass through the control points,
@@ -74,10 +75,19 @@ information.
 */
 public class CubicBSpline extends ParametricCurve {
 
-	private static int section = 0;
-	private static int numPoints = 0;
-	private static double[][] pt = new double[4][];
-	private static double[] b = new double[4];
+	private static final ThreadLocal<SharedData> SHARED_DATA = new ThreadLocal<SharedData>(){
+		protected SharedData initialValue() {
+			return new SharedData();
+		}
+	};
+	private final SharedData sharedData = SHARED_DATA.get();
+
+	private static class SharedData {
+		private int section = 0;
+		private int numPoints = 0;
+		private double[][] pt = new double[4][];
+		private double[] b = new double[4];
+	}
 
 	private boolean interpolateEndpoints = false;
 
@@ -95,82 +105,82 @@ public class CubicBSpline extends ParametricCurve {
 		double u2 = u * u;
 		double u3 = u2 * u;
 
-		if (numPoints == 4) {
-			b[0] = u2 * u;
-			b[1] = 3 * u2 * t;
-			b[2] = 3 * u * t2;
-			b[3] = t3;
+		if (sharedData.numPoints == 4) {
+			sharedData.b[0] = u2 * u;
+			sharedData.b[1] = 3 * u2 * t;
+			sharedData.b[2] = 3 * u * t2;
+			sharedData.b[3] = t3;
 		}
-		else if (numPoints == 5) {
-			if (section == 0) {
-				b[0] = u3;
-				b[1] = 7 * t3 / 4 - 9 * t2 / 2 + 3 * t;
-				b[2] = -t3 + 3 * t2 / 2;
-				b[3] = t3 / 4;
+		else if (sharedData.numPoints == 5) {
+			if (sharedData.section == 0) {
+				sharedData.b[0] = u3;
+				sharedData.b[1] = 7 * t3 / 4 - 9 * t2 / 2 + 3 * t;
+				sharedData.b[2] = -t3 + 3 * t2 / 2;
+				sharedData.b[3] = t3 / 4;
 			}
 			else {
-				b[0] = u3 / 4;
-				b[1] = -u3 + 3 * u2 / 2;
-				b[2] = 7 * u3 / 4 - 9 * u2 / 2 + 3 * u;
-				b[3] = t3;
+				sharedData.b[0] = u3 / 4;
+				sharedData.b[1] = -u3 + 3 * u2 / 2;
+				sharedData.b[2] = 7 * u3 / 4 - 9 * u2 / 2 + 3 * u;
+				sharedData.b[3] = t3;
 			}
 		}
-		else if (numPoints == 6) {
-			if (section == 0) {
-				b[0] = u3;
-				b[1] = 7 * t3 / 4 - 9 * t2 / 2 + 3 * t;
-				b[2] = -11 * t3 / 12 + 3 * t2 / 2;
-				b[3] = t3 / 6;
+		else if (sharedData.numPoints == 6) {
+			if (sharedData.section == 0) {
+				sharedData.b[0] = u3;
+				sharedData.b[1] = 7 * t3 / 4 - 9 * t2 / 2 + 3 * t;
+				sharedData.b[2] = -11 * t3 / 12 + 3 * t2 / 2;
+				sharedData.b[3] = t3 / 6;
 			}
-			else if (section == 1) {
-				b[0] = u3 / 4;
-				b[1] = 7 * t3 / 12 - 5 * t2 / 4 + t / 4 + 7.0 / 12;
-				b[2] = -7 * t3 / 12 + t2 / 2 + t / 2 + 1.0 / 6;
-				b[3] = t3 / 4;
+			else if (sharedData.section == 1) {
+				sharedData.b[0] = u3 / 4;
+				sharedData.b[1] = 7 * t3 / 12 - 5 * t2 / 4 + t / 4 + 7.0 / 12;
+				sharedData.b[2] = -7 * t3 / 12 + t2 / 2 + t / 2 + 1.0 / 6;
+				sharedData.b[3] = t3 / 4;
 			}
 			else {
-				b[0] = u3 / 6;
-				b[1] = -11 * u3 / 12 + 3 * u2 / 2;
-				b[2] = 7 * u3 / 4 - 9 * u2 / 2 + 3 * u;
-				b[3] = t3;
+				sharedData.b[0] = u3 / 6;
+				sharedData.b[1] = -11 * u3 / 12 + 3 * u2 / 2;
+				sharedData.b[2] = 7 * u3 / 4 - 9 * u2 / 2 + 3 * u;
+				sharedData.b[3] = t3;
 			}
 		}
 		else { // 7 and >= 8 have the same basis functions
-			if (section == 0) {
-				b[0] = u3;
-				b[1] = 7 * t3 / 4 - 9 * t2 / 2 + 3 * t;
-				b[2] = -11 * t3 / 12 + 3 * t2 / 2;
-				b[3] = t3 / 6;
+			if (sharedData.section == 0) {
+				sharedData.b[0] = u3;
+				sharedData.b[1] = 7 * t3 / 4 - 9 * t2 / 2 + 3 * t;
+				sharedData.b[2] = -11 * t3 / 12 + 3 * t2 / 2;
+				sharedData.b[3] = t3 / 6;
 			}
-			else if (section == 1) {
-				b[0] = u3 / 4;
-				b[1] = 7 * t3 / 12 - 5 * t2 / 4 + t / 4 + 7.0 / 12;
-				b[2] = -t3 / 2 + t2 / 2 + t / 2 + 1.0 / 6;
-				b[3] = t3 / 6;
+			else if (sharedData.section == 1) {
+				sharedData.b[0] = u3 / 4;
+				sharedData.b[1] = 7 * t3 / 12 - 5 * t2 / 4 + t / 4 + 7.0 / 12;
+				sharedData.b[2] = -t3 / 2 + t2 / 2 + t / 2 + 1.0 / 6;
+				sharedData.b[3] = t3 / 6;
 			}
-			else if (section == 2) { // if numPoints == 7 then section 2 gets skipped
-				b[0] = u3 / 6;
-				b[1] = t3 / 2 - t2 + 2.0 / 3;
-				b[2] = (-t3 + t2 + t) / 2 + 1.0 / 6;
-				b[3] = t3 / 6;
+			else if (sharedData.section == 2) { // if numPoints == 7 then section 2 gets skipped
+				sharedData.b[0] = u3 / 6;
+				sharedData.b[1] = t3 / 2 - t2 + 2.0 / 3;
+				sharedData.b[2] = (-t3 + t2 + t) / 2 + 1.0 / 6;
+				sharedData.b[3] = t3 / 6;
 			}
-			else if (section == 3) {
-				b[0] = u3 / 6;
-				b[1] = -u3 / 2 + u2 / 2 + u / 2 + 1.0 / 6;
-				b[2] = 7 * u3 / 12 - 5 * u2 / 4 + u / 4 + 7.0 / 12;
-				b[3] = t3 / 4;
+			else if (sharedData.section == 3) {
+				sharedData.b[0] = u3 / 6;
+				sharedData.b[1] = -u3 / 2 + u2 / 2 + u / 2 + 1.0 / 6;
+				sharedData.b[2] = 7 * u3 / 12 - 5 * u2 / 4 + u / 4 + 7.0 / 12;
+				sharedData.b[3] = t3 / 4;
 			}
 			else {
-				b[0] = u3 / 6;
-				b[1] = -11 * u3 / 12 + 3 * u2 / 2;
-				b[2] = 7 * u3 / 4 - 9 * u2 / 2 + 3 * u;
-				b[3] = t3;
+				sharedData.b[0] = u3 / 6;
+				sharedData.b[1] = -11 * u3 / 12 + 3 * u2 / 2;
+				sharedData.b[2] = 7 * u3 / 4 - 9 * u2 / 2 + 3 * u;
+				sharedData.b[3] = t3;
 			}
 		}
 
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < p.length - 1; j++)
-				p[j] = p[j] + pt[i][j] * b[i];
+				p[j] = p[j] + sharedData.pt[i][j] * sharedData.b[i];
 		}
 	}
 
@@ -212,12 +222,12 @@ public class CubicBSpline extends ParametricCurve {
 			throw new IllegalArgumentException("Group iterator size < 4");
 
 		if (interpolateEndpoints) {
-			numPoints = n;
-			section = 0;
+			sharedData.numPoints = n;
+			sharedData.section = 0;
 		}
 		else {
-			numPoints = -1; // defaults to numPoints >= 7 in the eval method
-			section = 2;	// section doesn't change when interpolateEndpoints == false
+			sharedData.numPoints = -1; // defaults to numPoints >= 7 in the eval method
+			sharedData.section = 2;	// section doesn't change when interpolateEndpoints == false
 		}
 
 		gi.set(0, 0);
@@ -225,7 +235,7 @@ public class CubicBSpline extends ParametricCurve {
 		int count_j = 0;
 
 		for (int i = 0; i < 4; i++)
-			pt[i] = cp.getPoint(gi.next()).getLocation();
+			sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 
 		double[] d = new double[mp.getDimension() + 1];
 		eval(d);
@@ -248,18 +258,18 @@ public class CubicBSpline extends ParametricCurve {
 			count_j = gi.count_j();
 
 			for (int i = 0; i < 4; i++)
-				pt[i] = cp.getPoint(gi.next()).getLocation();
+				sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 
 			if (interpolateEndpoints) {
 				if (n < 7) {
-					section++;
+					sharedData.section++;
 				}
 				else {
-					if (section != 2)
-						section++;
+					if (sharedData.section != 2)
+						sharedData.section++;
 
-					if (section == 2 && j == n - 2)
-						section++;
+					if (sharedData.section == 2 && j == n - 2)
+						sharedData.section++;
 				}
 			}
 		}
