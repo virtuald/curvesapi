@@ -17,7 +17,7 @@ However, bugfixes and reasonably scoped improvements will be accepted.
 List of changes
 ---------------
 
-* Version has been bumped to 1.04
+* Version has been bumped to 1.06
 * The javadocs have been removed from this distribution
 * The build scripts have been removed and pom.xml has been added to support
   usage with maven
@@ -37,4 +37,3 @@ The original project used a BSD license, and remains so.
 
 com.graphbuilder.org.apache.harmony.awt.gl.Crossing is from the Apache
 Harmony project and is released under the Apache 2.0 license.
-
