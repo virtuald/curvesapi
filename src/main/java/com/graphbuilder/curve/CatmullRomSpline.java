@@ -106,8 +106,9 @@ public class CatmullRomSpline extends ParametricCurve {
 			int count_j = gi.count_j();
 
 			for (int i = 0; i < 4; i++) {
-				if (!gi.hasNext())
-					throw new IllegalArgumentException("Group iterator ended early");
+				if (!gi.hasNext()) {
+					return;
+				}
 				sharedData.pt[i] = cp.getPoint(gi.next()).getLocation();
 			}
 
