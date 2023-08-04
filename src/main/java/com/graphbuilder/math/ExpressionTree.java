@@ -88,17 +88,21 @@ simplified to 16.</li>
 @see com.graphbuilder.math.Expression
 */
 public class ExpressionTree {
+        private static int MAX_LENGTH = 100000;
 
 	private ExpressionTree() {}
 
 	/**
 	Returns an expression-tree that represents the expression string.  Returns null if the string is empty.
 
-	@throws ExpressionParseException If the string is invalid.
+	@throws ExpressionParseException If the string is invalid or too long.
 	*/
 	public static Expression parse(String s) {
 		if (s == null)
 			throw new ExpressionParseException("Expression string cannot be null.", -1);
+
+                if (s.length() > ExpressionTree.MAX_LENGTH)
+                        throw new ExpressionParseException("Expression string is too long.", -1);
 
 		return build(s, 0);
 	}
