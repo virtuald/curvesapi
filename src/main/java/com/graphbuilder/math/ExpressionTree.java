@@ -88,7 +88,8 @@ simplified to 16.</li>
 @see com.graphbuilder.math.Expression
 */
 public class ExpressionTree {
-        private static int MAX_LENGTH = 100000;
+        /* The maximum length limit for expression string */
+        private static int MAX_LENGTH = 10000;
 
 	private ExpressionTree() {}
 
@@ -101,6 +102,7 @@ public class ExpressionTree {
 		if (s == null)
 			throw new ExpressionParseException("Expression string cannot be null.", -1);
 
+                // To reduce the chance of stack memory overflow from recursive parsing of long string */
                 if (s.length() > ExpressionTree.MAX_LENGTH)
                         throw new ExpressionParseException("Expression string is too long.", -1);
 
